@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Be My Valentine</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Happy+Monkey&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Fredoka", "Happy Monkey", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fffafc;
+        color: #ff3f81;
+        overflow: hidden;
+      }
+
+      .card {
+        position: relative;
+        width: min(600px, 92vw);
+        padding: 3.5rem 2.5rem 3rem;
+        text-align: center;
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 3px solid rgba(255, 63, 129, 0.15);
+      }
+
+      .card-locked {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(16px) scale(0.98);
+        transition: opacity 220ms ease, transform 220ms ease;
+      }
+
+      .card-unlocked {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+      }
+
+      .card-hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(24px) scale(0.94);
+      }
+
+      .intro {
+        margin: 0 0 0.5rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #ff5998;
+        letter-spacing: 0.04em;
+      }
+
+      h1 {
+        margin: 0 0 1.25rem;
+        font-family: "Happy Monkey", cursive;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        color: #ff2e92;
+      }
+
+      .love-illustration {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.65);
+        padding: 0.75rem;
+        box-shadow: inset 0 0 0 2px rgba(255, 105, 180, 0.3), 0 18px 35px rgba(255, 63, 129, 0.25);
+      }
+
+      .love-illustration img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        box-shadow: 0 12px 35px rgba(255, 63, 129, 0.35);
+        animation: floaty 4s ease-in-out infinite;
+      }
+
+      .love-illustration img.hidden {
+        display: none;
+      }
+
+      .beg-note {
+        min-height: 32px;
+        font-size: 1rem;
+        color: #ff5a8a;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        opacity: 0;
+        transition: opacity 180ms ease;
+      }
+
+      .beg-note.show {
+        opacity: 1;
+      }
+
+      .sticker-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: visible;
+        display: contents;
+      }
+
+      .emoji-sticker {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        font-size: clamp(22px, 4vw, 38px);
+        animation: tossSticker 1.8s ease forwards;
+        filter: drop-shadow(0 6px 10px rgba(255, 63, 129, 0.25));
+      }
+
+      .gif-sticker {
+        position: absolute;
+        width: min(120px, 30vw);
+        animation: tossSticker 2.2s ease forwards;
+        filter: drop-shadow(0 10px 18px rgba(255, 63, 129, 0.3));
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      @media (max-width: 480px) {
+        .card {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+        }
+
+        .love-illustration {
+          width: 180px;
+          height: 180px;
+          margin-bottom: 1rem;
+        }
+
+        .buttons {
+          width: min(300px, 94vw);
+          flex-direction: column;
+          align-items: stretch;
+          height: auto;
+          gap: 0.8rem;
+          padding: 0 1rem 1rem;
+          margin-top: 0.5rem;
+        }
+
+        .buttons .btn {
+          width: 120px;
+          min-width: auto;
+          display: block;
+        }
+      }
+
+      .gif-fallback {
+        position: absolute;
+        inset: 0.75rem;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.1rem;
+        color: #ff2e92;
+        font-size: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 240, 248, 0.9), rgba(255, 215, 235, 0.75));
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+      }
+
+      .gif-fallback.show {
+        opacity: 1;
+      }
+
+      .gif-fallback span {
+        font-size: 1.4rem;
+        animation: bounceHeart 1.6s ease-in-out infinite;
+      }
+
+      .gif-fallback span:nth-child(2) {
+        animation-delay: 0.25s;
+      }
+
+      .gif-fallback span:nth-child(3) {
+        animation-delay: 0.5s;
+      }
+
+      .buttons {
+        position: relative;
+        height: 240px;
+        width: min(360px, 85vw);
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        overflow: visible;
+      }
+
+      @media (max-width: 520px){
+        .card-unlocked .buttons {
+          margin: 0 !important;
+          justify-content: flex-start !important;
+        }
+      }
+
+      .btn {
+        padding: 0.85rem 2.6rem;
+        font-size: 1.15rem;
+        letter-spacing: 0.02em;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        transition: transform 150ms ease, box-shadow 150ms ease;
+      }
+
+      .btn-yes {
+        --grow-scale: 1;
+        background: linear-gradient(135deg, #ff76c8, #ff4589);
+        color: #fff3fa;
+        box-shadow: 0 12px 25px rgba(255, 70, 137, 0.4);
+        transition: transform 200ms ease, box-shadow 150ms ease;
+        transform: scale(var(--grow-scale));
+      }
+
+      .btn-yes:active {
+        transform: scale(calc(var(--grow-scale) * 0.97));
+      }
+
+      .btn-no {
+        background: #fff4f8;
+        color: #ff4574;
+        border: 2px dashed #ff8fb9;
+        box-shadow: 0 12px 20px rgba(255, 143, 185, 0.35);
+      }
+
+      .btn-no.floating {
+        position: absolute;
+        width: auto;
+        min-width: auto;
+      }
+
+      .btn-no:focus {
+        outline: none;
+      }
+
+      .floating-hearts {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .floating-hearts span {
+        position: absolute;
+        color: #fff1f7;
+        font-size: clamp(18px, 3vw, 32px);
+        animation: floatUp linear forwards;
+        opacity: 0.5;
+      }
+
+      @keyframes floatUp {
+        from {
+          transform: translateY(10vh) scale(0.7);
+          opacity: 0;
+        }
+        30% {
+          opacity: 0.75;
+        }
+        to {
+          transform: translateY(-110vh) scale(1.4);
+          opacity: 0;
+        }
+      }
+
+      @keyframes floaty {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes bounceHeart {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+        }
+        50% {
+          transform: translateY(-6px) scale(1.15);
+        }
+      }
+
+      @keyframes tossSticker {
+        0% {
+          opacity: 0;
+          transform: translate(var(--fromX, 0px), var(--fromY, 0px)) scale(0.4)
+            rotate(var(--fromRot, -10deg));
+        }
+        60% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--toX, 0px), var(--toY, 0px)) scale(1)
+            rotate(var(--toRot, 5deg));
+        }
+      }
+
+      .celebration-screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        background: transparent;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 350ms ease;
+      }
+
+      .celebration-screen.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .celebration-card {
+        max-width: 640px;
+        width: min(92vw, 580px);
+        text-align: center;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 36px;
+        padding: 3rem 2.5rem;
+        border: 3px solid rgba(255, 63, 129, 0.18);
+      }
+
+      .celebration-card h2 {
+        margin: 0 0 1rem;
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-family: "Happy Monkey", cursive;
+        color: #ff2e92;
+      }
+
+      .celebration-card p {
+        margin: 0 auto 2rem;
+        font-size: 1.15rem;
+        color: #ff6397;
+        max-width: 440px;
+      }
+
+      .love-shout {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 700;
+        color: #ff2e92;
+        margin-bottom: 0.5rem;
+      }
+
+      .celebration-gif {
+        width: min(320px, 70vw);
+        margin: 0 auto 1.5rem;
+      }
+
+      .celebration-gif img {
+        width: 100%;
+        display: block;
+      }
+
+
+      .petal-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: -1;
+      }
+
+      .petal {
+        position: absolute;
+        width: 24px;
+        height: 14px;
+        background: radial-gradient(circle at 20% 20%, #fff, #ffc2d8 40%, #ff8fb9);
+        border-radius: 60% 40% 60% 40%;
+        opacity: 0;
+        animation: fallPetal linear forwards;
+      }
+
+      @keyframes fallPetal {
+        0% {
+          opacity: 0;
+          transform: translateY(-10%) rotate(0deg) scale(0.9);
+        }
+        15% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(120vh) rotate(180deg) scale(1.1);
+        }
+      }
+
+      .password-gate {
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        z-index: 20;
+        transition: opacity 220ms ease;
+      }
+
+      .password-gate.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .gate-card {
+        width: min(520px, 94vw);
+        border-radius: 28px;
+        padding: 2.5rem;
+        text-align: center;
+        border: 2px solid rgba(255, 93, 167, 0.2);
+      }
+
+      .gate-subtitle {
+        margin: 0 0 0.35rem;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 0.3em;
+        color: #ff6cae;
+      }
+
+      .gate-title {
+        margin: 0 0 1.1rem;
+        font-family: "Happy Monkey", cursive;
+        font-size: clamp(1.6rem, 4vw, 2.3rem);
+        color: #ff2e92;
+      }
+
+      .gate-hint {
+        margin: 0 auto 1.6rem;
+        max-width: 320px;
+        color: #ff6397;
+        font-size: 1rem;
+      }
+
+      .gate-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .gate-input {
+        border: 2px solid rgba(255, 99, 151, 0.4);
+        border-radius: 999px;
+        padding: 1rem 1.5rem;
+        font-size: 1.05rem;
+        text-align: center;
+        color: #ff2e92;
+        font-weight: 600;
+        background: #fff;
+      }
+
+      .gate-btn {
+        width: 100%;
+      }
+
+      .gate-error {
+        margin-top: 0.4rem;
+        font-size: 0.95rem;
+        color: #ff2e62;
+        opacity: 0;
+        transition: opacity 180ms ease;
+      }
+
+      .gate-error.show {
+        opacity: 1;
+      }
+
+      @keyframes wiggle {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-6px);
+        }
+        75% {
+          transform: translateX(6px);
+        }
+      }
+
+      .shake {
+        animation: wiggle 300ms ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="floating-hearts" id="floatingHearts"></div>
+    <div class="password-gate" id="passwordGate">
+      <div class="gate-card" id="gateCard">
+        <p class="gate-subtitle">psst...</p>
+        <h2 class="gate-title">Enter our secret code</h2>
+        <form class="gate-form" id="gateForm">
+          <input
+            type="password"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="Secret code"
+            class="gate-input"
+            id="passwordInput"
+            autocomplete="off"
+            required
+          />
+          <button type="submit" class="btn btn-yes gate-btn">Submit</button>
+        </form>
+        <div class="gate-error" id="gateError">Oops, try again cutie! &#128536;</div>
+      </div>
+    </div>
+
+    <div class="card card-locked" id="mainCard">
+      <p class="intro">Happy Valentine's, Love!</p>
+      <h1>Will you be my Valentine?</h1>
+      <div class="love-illustration">
+        <img
+          src="https://media.tenor.com/UTmQNO88ls8AAAAi/cat-love.gif"
+          alt="Adorable cat couple gif"
+          id="loveGif"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+        />
+        <div class="gif-fallback" id="gifFallback" aria-hidden="true">
+          <span>&#10084;</span>
+          <span>&#127853;</span>
+          <span>&#10084;</span>
+        </div>
+      </div>
+      <div class="beg-note" id="begNote"></div>
+      <div class="sticker-layer" id="stickerLayer"></div>
+
+      <div class="buttons" id="buttonWrapper">
+        <button class="btn btn-yes" id="yesBtn">Yes!</button>
+        <button class="btn btn-no" id="noBtn">Nope</button>
+      </div>
+
+    </div>
+
+    <div class="celebration-screen" id="celebrationScreen" aria-live="polite">
+      <div class="petal-layer" id="petalLayer"></div>
+      <div class="celebration-card">
+        <div class="celebration-gif">
+          <img
+            src="https://media.tenor.com/mbcNPm5DPloAAAAi/cute-cat.gif"
+            alt="Cute hugging cat couple gif"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+            id="celebrationGif"
+          />
+          <div class="gif-fallback" id="celebrationFallback" aria-hidden="true">
+            <span>&#128154;</span>
+            <span>&#128062;</span>
+            <span>&#128154;</span>
+          </div>
+        </div>
+        <h2>Yaaaay! It's a date!</h2>
+        <h3 class="love-shout">I love you!</h3>
+      </div>
+    </div>
+
+    <script>
+      const PASSCODE = "101823";
+      const noBtn = document.getElementById("noBtn");
+      const yesBtn = document.getElementById("yesBtn");
+      const wrapper = document.getElementById("buttonWrapper");
+      const floatingHearts = document.getElementById("floatingHearts");
+      const stickerLayer = document.getElementById("stickerLayer");
+      const passwordGate = document.getElementById("passwordGate");
+      const gateForm = document.getElementById("gateForm");
+      const passwordInput = document.getElementById("passwordInput");
+      const gateError = document.getElementById("gateError");
+      const gateCard = document.getElementById("gateCard");
+      const mainCard = document.getElementById("mainCard");
+      const loveGif = document.getElementById("loveGif");
+      const gifFallback = document.getElementById("gifFallback");
+      const celebrationScreen = document.getElementById("celebrationScreen");
+      const celebrationGif = document.getElementById("celebrationGif");
+      const celebrationFallback = document.getElementById("celebrationFallback");
+      const begNote = document.getElementById("begNote");
+      const petalLayer = document.getElementById("petalLayer");
+
+      function moveNoButton() {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const yesRect = yesBtn.getBoundingClientRect();
+
+        if (!noBtn.classList.contains("floating")) {
+          const initialRect = noBtn.getBoundingClientRect();
+          noBtn.classList.add("floating");
+          noBtn.style.left = `${initialRect.left - wrapperRect.left}px`;
+          noBtn.style.top = `${initialRect.top - wrapperRect.top}px`;
+        }
+
+        const buttonRect = noBtn.getBoundingClientRect();
+        const travelX = wrapperRect.width - buttonRect.width + 260;
+        const travelY = wrapperRect.height - buttonRect.height + 260;
+
+        const offsetX = (Math.random() - 0.5) * travelX;
+        const offsetY = (Math.random() - 0.5) * travelY;
+
+        const yesCenterX = yesRect.left - wrapperRect.left + yesRect.width / 2;
+        const yesCenterY = yesRect.top - wrapperRect.top + yesRect.height / 2;
+
+        const targetX = Math.max(
+          buttonRect.width / 2,
+          Math.min(wrapperRect.width - buttonRect.width / 2, yesCenterX + offsetX),
+        );
+        const targetY = Math.max(
+          buttonRect.height / 2,
+          Math.min(wrapperRect.height - buttonRect.height / 2, yesCenterY + offsetY),
+        );
+
+        noBtn.style.left = `${targetX}px`;
+        noBtn.style.top = `${targetY}px`;
+      }
+
+      let hasCelebrated = false;
+      function celebrate() {
+        if (hasCelebrated) return;
+        hasCelebrated = true;
+        for (let i = 0; i < 18; i += 1) {
+          spawnHeart();
+        }
+        setTimeout(() => {
+          mainCard.classList.add("card-hidden");
+          celebrationScreen.classList.add("show");
+          launchPetals();
+        }, 450);
+      }
+
+      let yesGrowLevel = 0;
+      function growYesButton() {
+        yesGrowLevel += 1;
+        const scale = 1 + yesGrowLevel * 0.08;
+        yesBtn.style.setProperty("--grow-scale", scale.toFixed(2));
+        const glowStrength = Math.min(0.4 + yesGrowLevel * 0.03, 0.85);
+        yesBtn.style.boxShadow = `0 18px 32px rgba(255, 70, 137, ${glowStrength})`;
+      }
+
+      function spawnHeart() {
+        const heart = document.createElement("span");
+        heart.textContent = "\u2665";
+        heart.style.left = `${Math.random() * 100}%`;
+        heart.style.animationDuration = `${4 + Math.random() * 4}s`;
+        heart.style.fontSize = `${18 + Math.random() * 26}px`;
+        floatingHearts.appendChild(heart);
+        setTimeout(() => heart.remove(), 8000);
+      }
+
+      const stickerIcons = ["\uD83D\uDE2D", "\uD83D\uDE2B", "\uD83E\uDD72", "\uD83D\uDE22", "\uD83D\uDE2F", "\uD83D\uDE25", "\uD83D\uDE35\u200D\uD83D\uDCAB"];
+      const stickerGifs = [
+        "https://media.tenor.com/VMgEegKQgI0AAAAi/goma-phone.gif",
+        "https://media1.tenor.com/m/STjTuyHNVmwAAAAC/dog-crying-meme-doggo-crys.gif",
+        "https://media1.tenor.com/m/jDXNIPAp7h4AAAAC/sad-dog-sad-face.gif",
+      ];
+      const begMessages = ["Pleaseee?", "Pretty please?", "Press yes?", "Just say yes!", "I brought snacks!", "Don't say noooo..."];
+      let begIndex = -1;
+
+      function tossSticker() {
+        if (!stickerLayer) return;
+        const useGif = Math.random() < 0.35;
+        let sticker;
+
+        if (useGif) {
+          sticker = document.createElement("img");
+          sticker.src = stickerGifs[Math.floor(Math.random() * stickerGifs.length)];
+          sticker.alt = "Cute crying gif";
+          sticker.loading = "lazy";
+          sticker.referrerPolicy = "no-referrer";
+          sticker.className = "gif-sticker";
+        } else {
+          sticker = document.createElement("span");
+          sticker.className = "emoji-sticker";
+          sticker.textContent = stickerIcons[Math.floor(Math.random() * stickerIcons.length)];
+        }
+
+        const fromSide = Math.random() < 0.5 ? -1 : 1;
+        const fromX = fromSide * (120 + Math.random() * 60);
+        const fromY = (Math.random() - 0.5) * 220;
+        const toX = (Math.random() - 0.5) * 180;
+        const toY = (Math.random() - 0.5) * 140;
+
+        sticker.style.setProperty("--fromX", `${fromX}px`);
+        sticker.style.setProperty("--fromY", `${fromY}px`);
+        sticker.style.setProperty("--toX", `${toX}px`);
+        sticker.style.setProperty("--toY", `${toY}px`);
+        sticker.style.setProperty("--fromRot", `${fromSide * -20}deg`);
+        sticker.style.setProperty("--toRot", `${(Math.random() - 0.5) * 50}deg`);
+
+        stickerLayer.appendChild(sticker);
+        setTimeout(() => sticker.remove(), 1900);
+      }
+
+      function launchPetals() {
+        if (!petalLayer) return;
+        for (let i = 0; i < 30; i += 1) {
+          const petal = document.createElement("span");
+          petal.className = "petal";
+          petal.style.left = `${Math.random() * 100}%`;
+          petal.style.animationDuration = `${6 + Math.random() * 4}s`;
+          petal.style.animationDelay = `${Math.random() * 1.5}s`;
+          petalLayer.appendChild(petal);
+          setTimeout(() => petal.remove(), 11000);
+        }
+      }
+
+      ["mouseenter", "click", "touchstart", "focus"].forEach((eventName) => {
+        noBtn.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          moveNoButton();
+          growYesButton();
+          tossSticker();
+          if (begNote) {
+            begIndex = (begIndex + 1) % begMessages.length;
+            begNote.textContent = begMessages[begIndex];
+            begNote.classList.add("show");
+          }
+        });
+      });
+
+      yesBtn.addEventListener("click", () => {
+        noBtn.classList.remove("floating");
+        noBtn.style.left = "";
+        noBtn.style.top = "";
+        if (begNote) {
+          begNote.textContent = "";
+          begNote.classList.remove("show");
+        }
+        celebrate();
+      });
+
+      // Create a soft background heart drift
+      setInterval(spawnHeart, 2500);
+
+      gateForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const attempt = passwordInput.value.trim();
+        if (attempt === PASSCODE) {
+          passwordGate.classList.add("hidden");
+          mainCard.classList.remove("card-locked");
+          mainCard.classList.add("card-unlocked");
+          setTimeout(() => passwordGate.remove(), 400);
+        } else {
+          gateError.classList.add("show");
+          gateCard.classList.remove("shake");
+          void gateCard.offsetWidth; // restart animation
+          gateCard.classList.add("shake");
+          passwordInput.value = "";
+          passwordInput.focus();
+        }
+      });
+
+      if (loveGif && gifFallback) {
+        loveGif.addEventListener("error", () => {
+          loveGif.classList.add("hidden");
+          gifFallback.classList.add("show");
+        });
+      }
+
+      if (celebrationGif && celebrationFallback) {
+        celebrationGif.addEventListener("error", () => {
+          celebrationGif.classList.add("hidden");
+          celebrationFallback.classList.add("show");
+        });
+      }
+    </script>
+  </body>
+</html>
